@@ -4,16 +4,19 @@
 #include "stdafx.h"
 #include <iostream> // für die textprints
 #include "MemMan.h" //Zum nutzen der Memory Manager klasse
-#include <Windows.h> //behinhaltet funktionen zum schreiben und lesen des arbeitsspeichers
-#include <TlHelp32.h> // behinhaltet nützliche funktionen um dlls zu le
+#include "csgo.hpp" //offsets vom hazedumper
+#include <cstddef>
+
 
 MemMan* Mem; //globale deklarierung, muss aber in der main ausgeführt werden
 
 //offsets zum ändern
+//offsets im csgo hpp header!
+using namespace hazedumper::netvars;
+using namespace hazedumper::signatures;
 
-#define m_dwLocalPlayer 0xAA6614
-#define m_iCrossHairID 0xB2A4
-#define m_dwEntityList 0x4A8387C
+
+
 
 //statische offsets
 
@@ -40,12 +43,12 @@ void Trigger()
 		if (!triggerstate) continue;
 
 		//holt die spielerdaten
-		DWORD LocalPlayer_Base = Mem->Read<DWORD>(Mem->ClientDLL_Base + m_dwLocalPlayer);
-		int LocalPlayer_inCross = Mem->Read<int>(LocalPlayer_Base + m_iCrossHairID);
+		DWORD LocalPlayer_Base = Mem->Read<DWORD>(Mem->ClientDLL_Base + dwLocalPlayer);
+		int LocalPlayer_inCross = Mem->Read<int>(LocalPlayer_Base + m_iCrosshairId);
 		int LocalPlayer_Team = Mem->Read<int>(LocalPlayer_Base + m_iTeamNum);
 
 		//holt die EntityBase, mithilfe von dwEntityList
-		DWORD Trigger_EntityBase = Mem->Read<DWORD>(Mem->ClientDLL_Base + m_dwEntityList + ((LocalPlayer_inCross - 1) * 0x10));
+		DWORD Trigger_EntityBase = Mem->Read<DWORD>(Mem->ClientDLL_Base + dwEntityList + ((LocalPlayer_inCross - 1) * 0x10));
 		int Trigger_EntityTeam = Mem->Read<int>(Trigger_EntityBase + m_iTeamNum);
 
 		//bDormant ist eine bool wert zum prüfen ob der gegner lebt
@@ -71,19 +74,14 @@ void Trigger()
 
 
 
-void loader()
+
+int main()
 {
-	Mem = new MemMan(); //Konstruktor ausführen
+		Mem = new MemMan(); //Konstruktor ausführen
 	system("cls");
 	std::cout << "aznhook triggertest #1" << std::endl;
 	Trigger();
 	delete Mem; //zum löschen des Memory Manager pointer, damit der destructor ausgeführt wird und den handle richtig beendet.
-}
-
-
-int main()
-{
-	loader();
 	return 0;
 }
 
